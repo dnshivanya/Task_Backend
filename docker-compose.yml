@@ -15,7 +15,10 @@ services:
 
   # API Service
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: task-manager-api:latest
     container_name: task-manager-api
     restart: unless-stopped
     ports:

@@ -388,12 +388,26 @@ These platforms are better suited for serverless functions. For a traditional Ex
 
 ## Docker Support
 
-See `Dockerfile` and `docker-compose.yml` for containerized deployment.
+The application is fully dockerized and ready to run with Docker Compose.
+
+### Quick Start
 
 ```bash
-# Build and run with Docker Compose
+# Build and run with Docker Compose (includes MongoDB)
 docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
+
+The API will be available at `http://localhost:5000`
+
+### Detailed Docker Guide
+
+For comprehensive Docker instructions, troubleshooting, and deployment options, see **[DOCKER_GUIDE.md](./DOCKER_GUIDE.md)**
 
 ## Security Notes
 
