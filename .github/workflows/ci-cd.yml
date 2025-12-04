@@ -38,6 +38,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: task-manager-api/package-lock.json
+        continue-on-error: true
 
       - name: Install dependencies
         working-directory: ./task-manager-api
