@@ -99,6 +99,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Determine build context
+        id: set-context
+        run: |
+          if [ -d "task-manager-api" ]; then
+            echo "BUILD_CONTEXT=task-manager-api" >> $GITHUB_OUTPUT
+            echo "✅ Found task-manager-api subdirectory"
+          elif [ -f "Dockerfile" ]; then
+            echo "BUILD_CONTEXT=." >> $GITHUB_OUTPUT
+            echo "✅ Dockerfile found at repository root"
+          else
+            echo "BUILD_CONTEXT=." >> $GITHUB_OUTPUT
+            echo "⚠️ Using root directory as build context"
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -122,7 +136,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./task-manager-api
+          context: ${{ steps.set-context.outputs.BUILD_CONTEXT }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -185,6 +199,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Determine build context
+        id: set-context
+        run: |
+          if [ -d "task-manager-api" ]; then
+            echo "BUILD_CONTEXT=task-manager-api" >> $GITHUB_OUTPUT
+          elif [ -f "Dockerfile" ]; then
+            echo "BUILD_CONTEXT=." >> $GITHUB_OUTPUT
+          else
+            echo "BUILD_CONTEXT=." >> $GITHUB_OUTPUT
+          fi
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -203,7 +228,7 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./task-manager-api
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ${{ steps.set-context.outputs.BUILD_CONTEXT }}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
@@ -237,9 +262,20 @@ jobs:
       - name: Configure Docker for GCR
         run: gcloud auth configure-docker
 
+      - name: Determine build context
+        id: set-context
+        run: |
+          if [ -d "task-manager-api" ]; then
+            echo "BUILD_CONTEXT=task-manager-api" >> $GITHUB_OUTPUT
+          elif [ -f "Dockerfile" ]; then
+            echo "BUILD_CONTEXT=." >> $GITHUB_OUTPUT
+          else
+            echo "BUILD_CONTEXT=." >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and push to GCR
         run: |
-          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ./task-manager-api
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ steps.set-context.outputs.BUILD_CONTEXT }}
           docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Deploy to Cloud Run
