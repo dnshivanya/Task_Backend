@@ -342,6 +342,34 @@ Common HTTP status codes:
 - `404` - Not Found
 - `500` - Internal Server Error
 
+## CI/CD Pipeline
+
+This project includes a comprehensive CI/CD pipeline using GitHub Actions for automated testing, building, and deployment.
+
+### Features
+
+- ✅ **Automated Testing**: Runs tests on every push and pull request
+- ✅ **Docker Builds**: Automatically builds and publishes Docker images
+- ✅ **Multi-Platform Deployment**: Supports Render, Railway, AWS ECS, and Google Cloud Run
+- ✅ **Security Scanning**: Automated vulnerability scanning with Trivy
+- ✅ **Dependency Updates**: Automated dependency updates with Dependabot
+
+### Quick Start
+
+1. **Push to GitHub**: The pipeline automatically runs on push to `main`, `master`, or `develop` branches
+2. **Configure Secrets**: Add required secrets in GitHub repository settings (see [DEPLOYMENT.md](./DEPLOYMENT.md))
+3. **Deploy**: The pipeline will automatically deploy to your configured platform(s) on merge to main
+
+### Pipeline Workflow
+
+```
+Push/PR → Test → Build Docker Image → Deploy → Security Scan
+```
+
+### Documentation
+
+For detailed setup instructions, deployment options, and troubleshooting, see **[DEPLOYMENT.md](./DEPLOYMENT.md)**
+
 ## Deployment
 
 ### Deploy to Heroku
