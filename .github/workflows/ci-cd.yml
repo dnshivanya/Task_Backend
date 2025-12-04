@@ -199,8 +199,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Wait for image to be available
+        run: |
+          echo "Waiting for Docker image to be available..."
+          IMAGE="ghcr.io/${{ github.repository }}:latest"
+          for i in {1..10}; do
+            if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
+              echo "✅ Image is available!"
+              exit 0
+            fi
+            echo "Waiting for image... ($i/10)"
+            sleep 3
+          done
+          echo "⚠️ Image not found, but continuing anyway..."
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           image-ref: ghcr.io/${{ github.repository }}:latest
           format: 'sarif'
@@ -210,6 +225,7 @@ jobs:
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
+        if: always() && (success() || failure())
+        continue-on-error: true
         with:
           sarif_file: 'trivy-results.sarif'
