@@ -32,27 +32,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Determine working directory
+        id: set-dir
+        run: |
+          if [ -d "task-manager-api" ]; then
+            echo "WORK_DIR=task-manager-api" >> $GITHUB_OUTPUT
+            echo "✅ Found task-manager-api subdirectory"
+          elif [ -f "package.json" ]; then
+            echo "WORK_DIR=." >> $GITHUB_OUTPUT
+            echo "✅ Code is at repository root"
+          else
+            echo "WORK_DIR=." >> $GITHUB_OUTPUT
+            echo "⚠️ Using root directory"
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: task-manager-api/package-lock.json
+          cache-dependency-path: ${{ steps.set-dir.outputs.WORK_DIR }}/package-lock.json
         continue-on-error: true
 
       - name: Install dependencies
-        working-directory: ./task-manager-api
+        working-directory: ${{ steps.set-dir.outputs.WORK_DIR }}
         run: npm ci
 
       - name: Wait for MongoDB to be ready
         run: |
           echo "Waiting for MongoDB to be ready..."
-          # Wait for MongoDB service to be healthy (GitHub Actions handles this, but we add extra wait)
           sleep 5
           echo "MongoDB should be ready now"
 
       - name: Run linter (if configured)
-        working-directory: ./task-manager-api
+        working-directory: ${{ steps.set-dir.outputs.WORK_DIR }}
         run: |
           if [ -f .eslintrc.json ] || [ -f .eslintrc.js ]; then
             npm run lint || echo "Linting skipped - no linter configured"
@@ -62,7 +75,7 @@ jobs:
         continue-on-error: true
 
       - name: Run tests
-        working-directory: ./task-manager-api
+        working-directory: ${{ steps.set-dir.outputs.WORK_DIR }}
         env:
           NODE_ENV: test
           PORT: 5000
