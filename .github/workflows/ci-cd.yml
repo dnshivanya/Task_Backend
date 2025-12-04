@@ -43,6 +43,13 @@ jobs:
         working-directory: ./task-manager-api
         run: npm ci
 
+      - name: Wait for MongoDB to be ready
+        run: |
+          echo "Waiting for MongoDB to be ready..."
+          # Wait for MongoDB service to be healthy (GitHub Actions handles this, but we add extra wait)
+          sleep 5
+          echo "MongoDB should be ready now"
+
       - name: Run linter (if configured)
         working-directory: ./task-manager-api
         run: |

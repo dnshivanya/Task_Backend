@@ -6,17 +6,33 @@ beforeAll(async () => {
   // Connect to test database if not already connected
   if (mongoose.connection.readyState === 0) {
     const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/task-manager-test';
-    try {
-      await mongoose.connect(mongoUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-      });
-    } catch (error) {
-      // Connection might already exist, ignore
-      if (mongoose.connection.readyState === 0) {
-        throw error;
+    
+    // Retry connection with exponential backoff
+    let retries = 5;
+    let delay = 1000;
+    
+    while (retries > 0) {
+      try {
+        await mongoose.connect(mongoUri, {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+          serverSelectionTimeoutMS: 5000
+        });
+        console.log('MongoDB connected successfully');
+        break;
+      } catch (error) {
+        retries--;
+        if (retries === 0) {
+          console.error('Failed to connect to MongoDB after retries:', error);
+          throw error;
+        }
+        console.log(`MongoDB connection failed, retrying in ${delay}ms... (${retries} retries left)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2;
       }
     }
+  } else {
+    console.log('MongoDB already connected');
   }
 });
 
